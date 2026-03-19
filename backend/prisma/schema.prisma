@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  password    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  ojtTracking OjtTracking?
+}
+
+model OjtTracking {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate         DateTime
+  totalHours        Float
+  dutyHoursPerDay   Float
+  submissionHours   Float     @default(0)
+  totalDays         Int
+  completedHours    Float     @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  dutyLogs          DutyLog[]
+}
+
+model DutyLog {
+  id             Int          @id @default(autoincrement())
+  ojtTrackingId  Int
+  ojtTracking    OjtTracking  @relation(fields: [ojtTrackingId], references: [id], onDelete: Cascade)
+  date           DateTime     @default(now())
+  hoursWorked    Float
+  createdAt      DateTime     @default(now())
+}
