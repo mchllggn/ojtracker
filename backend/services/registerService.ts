@@ -1,4 +1,5 @@
-import { API_BASE_URL, AuthResponse, RegisterData } from "./authTypes";
+import { API_BASE_URL } from "./authTypes";
+import type { AuthResponse, RegisterData } from "./authTypes";
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
   try {

@@ -1,4 +1,5 @@
-import { API_BASE_URL, ProfileResponse } from "./authTypes";
+import { API_BASE_URL } from "./authTypes";
+import type { ProfileResponse } from "./authTypes";
 
 export const getProfile = async (token: string): Promise<ProfileResponse> => {
   const response = await fetch(`${API_BASE_URL}/auth/profile`, {

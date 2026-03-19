@@ -1,4 +1,5 @@
-import { API_BASE_URL, AuthResponse, LoginData } from "./authTypes";
+import { API_BASE_URL } from "./authTypes";
+import type { AuthResponse, LoginData } from "./authTypes";
 
 export const login = async (data: LoginData): Promise<AuthResponse> => {
   try {
