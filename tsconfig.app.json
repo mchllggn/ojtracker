@@ -28,5 +28,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "backend/services"]
+  "include": ["src"]
 }
