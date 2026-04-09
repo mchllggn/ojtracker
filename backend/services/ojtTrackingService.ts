@@ -1,230 +1,434 @@
-const API_BASE_URL = "http://localhost:3000/api";
+import { PrismaClient } from "@prisma/client";
 
-export interface OjtTrackingData {
-  startDate: Date;
-  totalHours: number;
-  dutyHoursPerDay: number;
-  submissionHours: number;
-  totalDays: number;
-  completedHours: number;
-}
+const prisma = new PrismaClient();
 
-export interface DutyLog {
-  id: number;
-  date: Date;
-  hoursWorked: number;
-}
-
-export interface OjtTracking extends OjtTrackingData {
-  id: number;
-  userId: number;
-  createdAt: Date;
-  updatedAt: Date;
-  dutyLogs?: DutyLog[];
-}
-
-export interface OjtTrackingResponse {
+interface OjtTrackingResponse {
   success: boolean;
-  tracking?: OjtTracking | null;
   message?: string;
+  tracking?: {
+    id: number;
+    userId: number;
+    startDate: Date;
+    totalHours: number;
+    dutyHoursPerDay: number;
+    totalDays: number;
+    completedHours: number;
+    createdAt: Date;
+    updatedAt: Date;
+    dutyLogs?: Array<{
+      id: number;
+      ojtTrackingId: number;
+      date: Date;
+      hoursWorked: number;
+      createdAt: Date;
+      updatedAt?: Date;
+    }>;
+  } | null;
 }
 
-export interface StartTrackingRequest {
+interface StartTrackingRequest {
   startDate: string;
   totalHours: number;
   dutyHoursPerDay: number;
-  submissionHours: number;
   totalDays: number;
 }
 
-export interface AddDutyRequest {
+interface AddDutyRequest {
   hoursWorked: number;
   date?: string;
 }
 
-export interface UpdateDutyRequest {
-  hoursWorked: number;
-}
-
-class OjtTrackingService {
-  private getAuthToken(): string | null {
-    return localStorage.getItem("token");
+export const getOjtTracking = async (
+  userId: number,
+): Promise<OjtTrackingResponse> => {
+  if (!userId) {
+    return { success: false, message: "Unauthorized" };
   }
 
-  private getAuthHeaders(): Record<string, string> {
-    const token = this.getAuthToken();
+  const tracking = await prisma.ojtTracking.findUnique({
+    where: { userId },
+    include: {
+      dutyLogs: {
+        orderBy: { date: "desc" },
+        take: 10,
+      },
+    },
+  });
+
+  return { success: true, tracking };
+};
+
+export const startOjtTracking = async (
+  userId: number,
+  data: StartTrackingRequest,
+): Promise<OjtTrackingResponse> => {
+  if (!userId) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const { startDate, totalHours, dutyHoursPerDay, totalDays } = data;
+
+  // Validate required fields
+  if (
+    !startDate ||
+    !totalHours ||
+    !dutyHoursPerDay ||
+    totalDays === undefined
+  ) {
     return {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
+      success: false,
+      message: "All fields are required",
     };
   }
 
-  async getOjtTracking(): Promise<OjtTrackingResponse> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ojt`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
+  // Check if tracking already exists
+  const existingTracking = await prisma.ojtTracking.findUnique({
+    where: { userId },
+  });
 
-      const result = (await response.json()) as OjtTrackingResponse;
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || "Failed to fetch OJT tracking",
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Get OJT tracking error:", error);
-      return {
-        success: false,
-        message: "Network error occurred",
-      };
-    }
+  if (existingTracking) {
+    return {
+      success: false,
+      message: "OJT tracking already exists. Please reset it first.",
+    };
   }
 
-  async startTracking(
-    data: StartTrackingRequest,
-  ): Promise<OjtTrackingResponse> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ojt/start`, {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-      });
+  const tracking = await prisma.ojtTracking.create({
+    data: {
+      userId,
+      startDate: new Date(startDate),
+      totalHours: parseFloat(String(totalHours)),
+      dutyHoursPerDay: parseFloat(String(dutyHoursPerDay)),
+      totalDays: parseInt(String(totalDays), 10),
+      completedHours: 0,
+    },
+  });
 
-      const result = (await response.json()) as OjtTrackingResponse;
+  return {
+    success: true,
+    message: "OJT tracking started successfully",
+    tracking,
+  };
+};
 
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || "Failed to start tracking",
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Start tracking error:", error);
-      return {
-        success: false,
-        message: "Network error occurred",
-      };
-    }
+export const addDutyHours = async (
+  userId: number,
+  data: AddDutyRequest,
+): Promise<OjtTrackingResponse> => {
+  if (!userId) {
+    return { success: false, message: "Unauthorized" };
   }
 
-  async addDutyHours(data: AddDutyRequest): Promise<OjtTrackingResponse> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ojt/duty`, {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-      });
+  const { hoursWorked, date } = data;
 
-      const result = (await response.json()) as OjtTrackingResponse;
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || "Failed to add duty hours",
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Add duty hours error:", error);
-      return {
-        success: false,
-        message: "Network error occurred",
-      };
-    }
+  if (!hoursWorked || parseFloat(String(hoursWorked)) <= 0) {
+    return {
+      success: false,
+      message: "Valid hours worked is required",
+    };
   }
 
-  async updateDutyLog(
-    dutyLogId: number,
-    data: UpdateDutyRequest,
-  ): Promise<OjtTrackingResponse> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ojt/duty/${dutyLogId}`, {
-        method: "PUT",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-      });
-
-      const result = (await response.json()) as OjtTrackingResponse;
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || "Failed to update duty log",
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Update duty log error:", error);
+  let targetDate = new Date();
+  if (date) {
+    const dateMatch = String(date).match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+    if (!dateMatch) {
       return {
         success: false,
-        message: "Network error occurred",
+        message: "Invalid date format. Use YYYY-MM-DD",
       };
     }
+
+    const [, year, month, day] = dateMatch;
+    targetDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      0,
+      0,
+      0,
+      0,
+    );
   }
 
-  async deleteDutyLog(dutyLogId: number): Promise<OjtTrackingResponse> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ojt/duty/${dutyLogId}`, {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
+  const tracking = await prisma.ojtTracking.findUnique({
+    where: { userId },
+  });
+
+  if (!tracking) {
+    return {
+      success: false,
+      message: "OJT tracking not found. Please start tracking first.",
+    };
+  }
+
+  const hours = parseFloat(String(hoursWorked));
+  const dayStart = new Date(
+    targetDate.getFullYear(),
+    targetDate.getMonth(),
+    targetDate.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+  const dayEnd = new Date(
+    targetDate.getFullYear(),
+    targetDate.getMonth(),
+    targetDate.getDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+
+  const existingDutyLogs = await prisma.dutyLog.findMany({
+    where: {
+      ojtTrackingId: tracking.id,
+      date: {
+        gte: dayStart,
+        lt: dayEnd,
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const existingHoursForDay = existingDutyLogs.reduce(
+    (total, log) => total + log.hoursWorked,
+    0,
+  );
+
+  const completedHoursDelta = hours - existingHoursForDay;
+
+  await prisma.$transaction(async (tx) => {
+    if (existingDutyLogs.length > 0) {
+      await tx.dutyLog.deleteMany({
+        where: {
+          id: {
+            in: existingDutyLogs.map((log) => log.id),
+          },
+        },
       });
-
-      const result = (await response.json()) as OjtTrackingResponse;
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || "Failed to delete duty log",
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Delete duty log error:", error);
-      return {
-        success: false,
-        message: "Network error occurred",
-      };
     }
+
+    await tx.dutyLog.create({
+      data: {
+        ojtTrackingId: tracking.id,
+        date: targetDate,
+        hoursWorked: hours,
+      },
+    });
+  });
+
+  const newCompletedHours = Math.max(
+    0,
+    tracking.completedHours + completedHoursDelta,
+  );
+
+  // Update tracking
+  const updatedTracking = await prisma.ojtTracking.update({
+    where: { id: tracking.id },
+    data: {
+      completedHours: newCompletedHours,
+    },
+    include: {
+      dutyLogs: {
+        orderBy: { date: "desc" },
+        take: 10,
+      },
+    },
+  });
+
+  return {
+    success: true,
+    message:
+      existingDutyLogs.length > 0
+        ? "Duty hours updated successfully"
+        : "Duty hours added successfully",
+    tracking: updatedTracking,
+  };
+};
+
+export const updateDutyLog = async (
+  userId: number,
+  dutyLogId: number,
+  data: { hoursWorked: number },
+): Promise<OjtTrackingResponse> => {
+  if (!userId) {
+    return { success: false, message: "Unauthorized" };
   }
 
-  async resetTracking(): Promise<{ success: boolean; message?: string }> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ojt/reset`, {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = (await response.json()) as {
-        success: boolean;
-        message?: string;
-      };
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: result.message || "Failed to reset tracking",
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Reset tracking error:", error);
-      return {
-        success: false,
-        message: "Network error occurred",
-      };
-    }
+  if (!dutyLogId || Number.isNaN(dutyLogId)) {
+    return { success: false, message: "Invalid duty log id" };
   }
-}
 
-export default new OjtTrackingService();
+  const { hoursWorked } = data;
+
+  if (!hoursWorked || parseFloat(String(hoursWorked)) <= 0) {
+    return {
+      success: false,
+      message: "Valid hours worked is required",
+    };
+  }
+
+  const tracking = await prisma.ojtTracking.findUnique({
+    where: { userId },
+  });
+
+  if (!tracking) {
+    return {
+      success: false,
+      message: "OJT tracking not found",
+    };
+  }
+
+  const existingDutyLog = await prisma.dutyLog.findFirst({
+    where: {
+      id: dutyLogId,
+      ojtTrackingId: tracking.id,
+    },
+  });
+
+  if (!existingDutyLog) {
+    return {
+      success: false,
+      message: "Duty log not found",
+    };
+  }
+
+  const nextHours = parseFloat(String(hoursWorked));
+  const completedHoursDelta = nextHours - existingDutyLog.hoursWorked;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.dutyLog.update({
+      where: { id: dutyLogId },
+      data: { hoursWorked: nextHours },
+    });
+
+    await tx.ojtTracking.update({
+      where: { id: tracking.id },
+      data: {
+        completedHours: Math.max(
+          0,
+          tracking.completedHours + completedHoursDelta,
+        ),
+      },
+    });
+  });
+
+  const updatedTracking = await prisma.ojtTracking.findUnique({
+    where: { id: tracking.id },
+    include: {
+      dutyLogs: {
+        orderBy: { date: "desc" },
+        take: 10,
+      },
+    },
+  });
+
+  return {
+    success: true,
+    message: "Duty log updated successfully",
+    tracking: updatedTracking,
+  };
+};
+
+export const deleteDutyLog = async (
+  userId: number,
+  dutyLogId: number,
+): Promise<OjtTrackingResponse> => {
+  if (!userId) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  if (!dutyLogId || Number.isNaN(dutyLogId)) {
+    return { success: false, message: "Invalid duty log id" };
+  }
+
+  const tracking = await prisma.ojtTracking.findUnique({
+    where: { userId },
+  });
+
+  if (!tracking) {
+    return {
+      success: false,
+      message: "OJT tracking not found",
+    };
+  }
+
+  const existingDutyLog = await prisma.dutyLog.findFirst({
+    where: {
+      id: dutyLogId,
+      ojtTrackingId: tracking.id,
+    },
+  });
+
+  if (!existingDutyLog) {
+    return {
+      success: false,
+      message: "Duty log not found",
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.dutyLog.delete({
+      where: { id: dutyLogId },
+    });
+
+    await tx.ojtTracking.update({
+      where: { id: tracking.id },
+      data: {
+        completedHours: Math.max(
+          0,
+          tracking.completedHours - existingDutyLog.hoursWorked,
+        ),
+      },
+    });
+  });
+
+  const updatedTracking = await prisma.ojtTracking.findUnique({
+    where: { id: tracking.id },
+    include: {
+      dutyLogs: {
+        orderBy: { date: "desc" },
+        take: 10,
+      },
+    },
+  });
+
+  return {
+    success: true,
+    message: "Duty log deleted successfully",
+    tracking: updatedTracking,
+  };
+};
+
+export const resetOjtTracking = async (
+  userId: number,
+): Promise<OjtTrackingResponse> => {
+  if (!userId) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const tracking = await prisma.ojtTracking.findUnique({
+    where: { userId },
+  });
+
+  if (!tracking) {
+    return {
+      success: false,
+      message: "OJT tracking not found",
+    };
+  }
+
+  // Delete tracking (will cascade delete duty logs)
+  await prisma.ojtTracking.delete({
+    where: { id: tracking.id },
+  });
+
+  return {
+    success: true,
+    message: "OJT tracking reset successfully",
+  };
+};

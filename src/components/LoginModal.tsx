@@ -1,34 +1,62 @@
-import React from "react";
+import { type FormEvent, useState } from "react";
+import { login, type LoginFieldErrors, type User } from "../services/api";
 import Modal from "./Modal";
 import TextInput from "./TextInput";
 import PrimaryButton from "./PrimaryButton";
-import type { LoginFieldErrors } from "../../backend/services/authTypes";
 
 interface LoginModalProps {
   showModal: boolean;
   setShowModal: (show: boolean) => void;
-  loginData: { email: string; password: string };
-  setLoginData: (data: { email: string; password: string }) => void;
-  errorMessage?: string;
-  fieldErrors?: LoginFieldErrors;
-  handleLogin: (e: React.FormEvent) => void;
+  onLoginSuccess: (user: User, token: string) => void;
   setShowRegisterModal: (show: boolean) => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({
+const LoginModal = ({
   showModal,
   setShowModal,
-  loginData,
-  setLoginData,
-  errorMessage,
-  fieldErrors,
-  handleLogin,
+  onLoginSuccess,
   setShowRegisterModal,
-}) => {
+}: LoginModalProps) => {
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
+
+  const clearErrors = () => {
+    setErrorMessage("");
+    setFieldErrors({});
+  };
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    clearErrors();
+
+    const response = await login({
+      email: loginData.email,
+      password: loginData.password,
+    });
+
+    if (response.success && response.user && response.token) {
+      onLoginSuccess(response.user, response.token);
+      return;
+    }
+
+    const nextFieldErrors = (response.fieldErrors ?? {}) as LoginFieldErrors;
+    setFieldErrors(nextFieldErrors);
+    if (!nextFieldErrors.email && !nextFieldErrors.password) {
+      setErrorMessage(response.message || "Login failed. Please try again.");
+    }
+  };
+
   return (
-    <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+    <Modal
+      isOpen={showModal}
+      onClose={() => {
+        clearErrors();
+        setShowModal(false);
+      }}
+    >
       <form className="space-y-6" onSubmit={handleLogin}>
-        <div className="space-y-4">
+        <div className="space-y-6">
           {errorMessage && (
             <p className="text-sm text-red-600" role="alert">
               {errorMessage}
@@ -78,7 +106,10 @@ const LoginModal: React.FC<LoginModalProps> = ({
         <span>Don't have a Account?</span>
         <a
           href="#"
-          onClick={() => setShowRegisterModal(true)}
+          onClick={() => {
+            clearErrors();
+            setShowRegisterModal(true);
+          }}
           className="text-blue-600 font-medium hover:underline"
         >
           Sign Up

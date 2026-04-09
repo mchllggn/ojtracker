@@ -1,5 +1,5 @@
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import type { OjtTracking } from "../services/api";
 
 interface TrackingCalendarProps {
   trackingData: OjtTracking | null;
@@ -25,7 +25,7 @@ const TrackingCalendar = ({
   };
 
   return (
-    <div className="h-fit overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
+    <div className="h-fit w-full overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
       <Calendar
         mode="single"
         selected={new Date()}

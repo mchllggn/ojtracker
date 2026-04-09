@@ -1,4 +1,4 @@
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import type { OjtTracking } from "../services/api";
 import { format } from "date-fns";
 import { useState } from "react";
 
@@ -122,7 +122,9 @@ const DutyLogsTable = ({
                       ) : (
                         <>
                           <button
-                            onClick={() => handleEditClick(log.id, log.hoursWorked)}
+                            onClick={() =>
+                              handleEditClick(log.id, log.hoursWorked)
+                            }
                             className="px-3 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200"
                           >
                             Edit

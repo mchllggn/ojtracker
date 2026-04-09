@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth";
-
-const prisma = new PrismaClient();
+import { getProfile as getProfileService } from "../services/profileService";
 
 export const getProfile = async (
   req: AuthRequest,
@@ -14,17 +12,14 @@ export const getProfile = async (
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { id: true, name: true, email: true, createdAt: true },
-    });
+    const result = await getProfileService(req.user.userId);
 
-    if (!user) {
-      res.status(404).json({ success: false, message: "User not found" });
+    if (!result.success) {
+      res.status(404).json(result);
       return;
     }
 
-    res.json({ success: true, user });
+    res.json(result);
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ success: false, message: "Server error" });

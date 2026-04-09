@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import NumberInput from "./NumberInput";
-import ojtTrackingService from "../../backend/services/ojtTrackingService";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import { startTracking, type OjtTracking } from "../services/api";
 import PrimaryButton from "./PrimaryButton";
 
 interface StartTrackingFormProps {
@@ -15,18 +13,16 @@ const StartTrackingForm = ({
   onSuccess,
   guestMode = false,
 }: StartTrackingFormProps) => {
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 3;
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formError, setFormError] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [totalHours, setTotalHours] = useState("");
   const [dutyHours, setDutyHours] = useState("");
-  const [submissionHoursInput, setSubmissionHoursInput] = useState("");
 
   const total = parseFloat(totalHours);
   const duty = parseFloat(dutyHours);
-  const submission = parseFloat(submissionHoursInput) || 0;
 
   const validateStep = (step: number) => {
     if (step === 1 && !startDate) {
@@ -39,10 +35,6 @@ const StartTrackingForm = ({
 
     if (step === 3 && (Number.isNaN(duty) || duty <= 0)) {
       return "Please enter valid duty hours per day.";
-    }
-
-    if (step === 4 && submission < 0) {
-      return "Submission hours cannot be negative.";
     }
 
     return "";
@@ -68,7 +60,7 @@ const StartTrackingForm = ({
     e.preventDefault();
 
     const validationMessage =
-      validateStep(1) || validateStep(2) || validateStep(3) || validateStep(4);
+      validateStep(1) || validateStep(2) || validateStep(3);
     if (validationMessage) {
       setFormError(validationMessage);
       return;
@@ -86,7 +78,6 @@ const StartTrackingForm = ({
         startDate,
         totalHours: total,
         dutyHoursPerDay: duty,
-        submissionHours: submission,
         totalDays: days,
         completedHours: 0,
         createdAt: now,
@@ -99,11 +90,10 @@ const StartTrackingForm = ({
     try {
       setFormError("");
       setIsLoading(true);
-      const response = await ojtTrackingService.startTracking({
+      const response = await startTracking({
         startDate: startDate.toISOString(),
         totalHours: total,
         dutyHoursPerDay: duty,
-        submissionHours: submission,
         totalDays: days,
       });
 
@@ -125,7 +115,7 @@ const StartTrackingForm = ({
       <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         Start Tracking Your OJT
       </h2>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {Array.from({ length: TOTAL_STEPS }, (_, index) => {
           const step = index + 1;
           const isActive = currentStep === step;
@@ -149,12 +139,12 @@ const StartTrackingForm = ({
       )}
 
       {currentStep === 1 && (
-        <div className="space-y-3">
+        <div>
           <label
             htmlFor="startDate"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Step 1 of 4 · OJT Start Date
+            OJT Start Date
           </label>
           <div className="flex justify-center rounded-lg max-w-xs mx-auto border border-gray-300 bg-white p-3 shadow-sm">
             <Calendar
@@ -164,11 +154,6 @@ const StartTrackingForm = ({
               className="w-full"
             />
           </div>
-          <p className="text-sm text-gray-600">
-            {startDate
-              ? `Selected: ${format(startDate, "PP")}`
-              : "Select your OJT starting day."}
-          </p>
         </div>
       )}
 
@@ -178,7 +163,7 @@ const StartTrackingForm = ({
             htmlFor="totalHours"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Step 2 of 4 · Hours needed to complete
+            Hours needed to complete
           </label>
           <NumberInput
             id="totalHours"
@@ -200,7 +185,7 @@ const StartTrackingForm = ({
             htmlFor="dutyHours"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Step 3 of 4 · Hours of Duty (Per Day)
+            Hours of Duty (Per Day)
           </label>
           <NumberInput
             id="dutyHours"
@@ -216,40 +201,16 @@ const StartTrackingForm = ({
         </div>
       )}
 
-      {currentStep === 4 && (
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="submissionHours"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Step 4 of 4 · Hours for Report Submission
-            </label>
-            <NumberInput
-              id="submissionHours"
-              value={submissionHoursInput}
-              onChange={(value) => {
-                setSubmissionHoursInput(value);
-                setFormError("");
-              }}
-              placeholder="e.g., 40"
-              min={0}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm hover:border-indigo-400 bg-white"
-            />
-          </div>
-        </div>
-      )}
-
       <div className="flex gap-3">
         {currentStep > 1 && (
-          <PrimaryButton
+          <button
             type="button"
             onClick={handlePreviousStep}
-            className="w-full py-3 text-lg bg-gray-800 hover:bg-gray-900 transition-all"
+            className="w-full py-3 text-lg bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             disabled={isLoading}
           >
-            Back
-          </PrimaryButton>
+            Previous
+          </button>
         )}
 
         {currentStep < TOTAL_STEPS ? (

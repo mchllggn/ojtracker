@@ -2,9 +2,7 @@ import express, { Request, Response, Application } from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth";
 import ojtTrackingRoutes from "./routes/ojtTracking";
-import dotenv from "dotenv";
-
-dotenv.config();
+import chatRoutes from "./routes/chat";
 
 const app: Application = express();
 const PORT: string | number = process.env.PORT || 3000;
@@ -16,6 +14,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/ojt", ojtTrackingRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Root route
 app.get("/", (req: Request, res: Response) => {
@@ -26,6 +25,7 @@ app.get("/", (req: Request, res: Response) => {
     endpoints: {
       auth: "/api/auth",
       ojt: "/api/ojt",
+      chat: "/api/chat",
       health: "/api/health",
     },
   });

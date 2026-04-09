@@ -1,198 +1,176 @@
-# MyApp - Full-Stack MVC Application
+# OJTracker
 
-A modern full-stack web application with authentication, built using React, Node.js, Express, and Prisma ORM with MySQL.
+OJTracker is a full-stack OJT hour tracking app with authentication, duty log management, calendar-based updates, and an AI chat endpoint.
 
-## Architecture
+## What This Project Does
 
-This application follows the **MVC (Model-View-Controller)** architectural pattern:
+- Tracks OJT progress from start date to target completion hours
+- Logs duty hours and computes completed vs remaining hours
+- Allows updating and deleting duty logs
+- Shows progress through dedicated Home, Calendar, and Duty Logs views
+- Supports guest demo mode without account login
+- Provides JWT-based authentication for protected routes
+- Includes a backend chat endpoint powered by Gemini
 
-### Backend Structure
+## Tech Stack
 
+Frontend:
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+
+Backend:
+
+- Node.js + Express 5
+- TypeScript
+- Prisma ORM
+- MySQL
+- JWT + bcryptjs
+
+## Project Structure
+
+```text
+vite-project/
+  src/                  # React app
+  backend/
+    controllers/        # Request handlers
+    routes/             # API route definitions
+    services/           # Business/data service layer
+    middleware/         # Auth middleware
+    prisma/             # Schema + migrations
 ```
-backend/
-├── controllers/     # Business logic layer
-│   └── authController.js
-├── routes/         # Route definitions
-│   └── auth.js
-├── middleware/     # Authentication middleware
-│   └── auth.js
-├── prisma/         # Database schema and migrations
-│   └── schema.prisma
-├── index.js        # Main server file
-├── package.json
-└── .env
-```
 
-### Frontend Structure
+## Routes
 
-```
-src/
-├── components/     # Reusable UI components
-│   └── TextInput.tsx
-├── pages/         # Page components
-│   ├── Index.tsx
-│   ├── Login.tsx
-│   └── Register.tsx
-├── services/      # API service layer
-│   └── authService.ts
-└── main.tsx
-```
+Frontend:
 
-## Features
+- / (landing page)
+- /demo (guest demo mode)
+- /home (protected)
+- /calendar (protected)
+- /duty-logs (protected)
 
-- **User Authentication**: Register and login functionality
-- **JWT Tokens**: Secure authentication with JSON Web Tokens
-- **Password Hashing**: bcryptjs for secure password storage
-- **Database**: MySQL with Prisma ORM
-- **Responsive UI**: Tailwind CSS styling
-- **TypeScript**: Type-safe frontend and backend
-- **MVC Architecture**: Clean separation of concerns
+Backend base URL: http://localhost:3000
 
-## API Endpoints
+Authentication:
 
-### Authentication Routes (`/api/auth`)
+- POST /api/auth/register
+- POST /api/auth/login
+- GET /api/auth/profile (protected)
 
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile (protected)
+OJT Tracking (protected):
 
-### Health Check
+- GET /api/ojt
+- POST /api/ojt/start
+- POST /api/ojt/duty
+- PUT /api/ojt/duty/:id
+- DELETE /api/ojt/duty/:id
+- DELETE /api/ojt/reset
 
-- `GET /api/health` - Server health check
+Chat:
 
-## Getting Started
+- POST /api/chat
 
-### Prerequisites
+Health:
 
-- Node.js (v18+)
-- MySQL (XAMPP or standalone)
-- pnpm (recommended) or npm
+- GET /api/health
 
-### Backend Setup
+## Prerequisites
 
-1. **Install dependencies:**
-
-   ```bash
-   cd backend
-   pnpm install
-   ```
-
-2. **Database setup:**
-
-   - Ensure MySQL is running (XAMPP Control Panel)
-   - Update `.env` with your database credentials
-   - Run migrations:
-
-   ```bash
-   npx prisma migrate dev --name init
-   ```
-
-3. **Start the backend server:**
-   ```bash
-   pnpm start
-   ```
-   Server runs on `http://localhost:3000`
-
-### Frontend Setup
-
-1. **Install dependencies:**
-
-   ```bash
-   pnpm install
-   ```
-
-2. **Start the development server:**
-   ```bash
-   pnpm run dev
-   ```
-   App runs on `http://localhost:5174`
+- Node.js 18+
+- pnpm
+- MySQL
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory:
+Create backend/.env:
 
 ```env
-DATABASE_URL="mysql://username:password@localhost:3306/myapp_db"
-JWT_SECRET="your-secret-key"
+DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/ojtracker"
+JWT_SECRET="replace-with-a-secure-secret"
 PORT=3000
+GOOGLE_GENERATIVE_AI_API_KEY="optional-for-chat"
 ```
 
-## MVC Components
+Optional frontend environment:
 
-### Model
+Create .env in the project root if your API is not on localhost:3000.
 
-- **Prisma Schema**: Defines database structure
-- **Database**: MySQL with Prisma client for data access
-
-### View
-
-- **React Components**: UI components and pages
-- **Tailwind CSS**: Styling and responsive design
-
-### Controller
-
-- **Express Routes**: Handle HTTP requests
-- **Auth Controller**: Business logic for authentication
-- **Middleware**: Authentication and validation
-
-## Security Features
-
-- Password hashing with bcryptjs
-- JWT token-based authentication
-- CORS enabled for frontend communication
-- Input validation and sanitization
-- Protected routes with middleware
-
-## Development
-
-### Available Scripts
-
-**Backend:**
-
-- `pnpm start` - Start production server
-- `pnpm dev` - Start development server with nodemon (auto-restart on changes)
-
-**Frontend:**
-
-- `pnpm dev` - Start Vite development server
-- `pnpm build` - Build for production
-- `pnpm preview` - Preview production build
-
-### Database Management
-
-**Prisma Commands:**
-
-- `npx prisma migrate dev` - Create and apply migrations
-- `npx prisma studio` - Open Prisma Studio (database GUI)
-- `npx prisma generate` - Generate Prisma client
-
-### Development Tools
-
-**Nodemon Configuration:**
-
-- Automatically restarts server on file changes
-- Ignores `node_modules` and `prisma/migrations`
-- Watches `.js` and `.json` files
-
-## Project Structure Benefits
-
-1. **Separation of Concerns**: Clear distinction between data, logic, and presentation
-2. **Maintainability**: Easy to modify individual components
-3. **Scalability**: Simple to add new features and routes
-4. **Testability**: Isolated components for unit testing
-5. **Type Safety**: TypeScript provides compile-time error checking
-
-## Contributing
-
-1. Follow the MVC architecture
-2. Use TypeScript for type safety
-3. Write clean, documented code
-4. Test API endpoints thoroughly
-5. Follow consistent naming conventions
-   ...reactDom.configs.recommended.rules,
-   },
-   })
-
+```env
+VITE_API_URL="http://localhost:3000"
 ```
 
+## Setup
+
+1. Install frontend dependencies:
+
+```bash
+pnpm install
+```
+
+2. Install backend dependencies:
+
+```bash
+pnpm -C backend install
+```
+
+3. Apply Prisma migrations:
+
+```bash
+pnpm -C backend prisma migrate dev
+```
+
+4. Start both frontend and backend in development:
+
+```bash
+pnpm dev:all
+```
+
+You can also run each service separately:
+
+```bash
+# Frontend
+pnpm dev
+
+# Backend
+pnpm -C backend dev
+```
+
+## Scripts
+
+Root:
+
+- pnpm dev
+- pnpm dev:all
+- pnpm build
+- pnpm lint
+- pnpm preview
+
+Backend:
+
+- pnpm -C backend dev
+- pnpm -C backend build
+- pnpm -C backend start
+
+## Database Models
+
+- User
+- OjtTracking
+- DutyLog
+
+Schema location: backend/prisma/schema.prisma
+
+## Notes Before Pushing
+
+- Ensure backend/.env exists and is not committed
+- Confirm frontend and backend both start successfully
+- Run lint/build checks if needed:
+
+```bash
+pnpm lint
+pnpm build
+pnpm -C backend build
 ```

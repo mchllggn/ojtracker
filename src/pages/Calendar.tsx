@@ -1,43 +1,34 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import ojtTrackingService from "../../backend/services/ojtTrackingService";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import {
+  getOjtTracking,
+  addDutyHours,
+  type OjtTracking,
+} from "../services/api";
 import Layout from "../components/Layout";
 import TrackingCalendar from "../components/TrackingCalendar";
-import { useAuth } from "../hooks/useAuth";
 import NumberInput from "../components/NumberInput";
 
 const Calendar = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
   const [trackingData, setTrackingData] = useState<OjtTracking | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDayHours, setSelectedDayHours] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    if (!user || !isAuthenticated) {
-      navigate("/");
-      return;
-    }
-
     const loadTrackingData = async () => {
       try {
-        const response = await ojtTrackingService.getOjtTracking();
+        const response = await getOjtTracking();
         if (response.success && response.tracking) {
           setTrackingData(response.tracking);
         }
       } catch (error) {
         console.error("Failed to load tracking data:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     loadTrackingData();
-  }, [isAuthenticated, navigate, user]);
+  }, []);
 
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
@@ -74,8 +65,8 @@ const Calendar = () => {
         return;
       }
 
-      // Add or update duty hours using the main service
-      const response = await ojtTrackingService.addDutyHours({
+      // Add or update duty hours
+      const response = await addDutyHours({
         hoursWorked: hours,
         date: format(selectedDate, "yyyy-MM-dd"),
       });
@@ -94,23 +85,11 @@ const Calendar = () => {
     }
   };
 
-  if (!user || isLoading) {
-    return (
-      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Layout>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">OJT Calendar</h2>
-      <div className="flex gap-8">
+      <div className="flex gap-8 justify-center items-start py-10">
         {/* Calendar */}
-        <div className="flex-1">
+        <div className="max-w-2xl flex-1">
           <TrackingCalendar
             trackingData={trackingData}
             onSelectDate={handleSelectDate}
@@ -119,7 +98,7 @@ const Calendar = () => {
 
         {/* Right Panel */}
         {selectedDate && (
-          <div className="w-72 bg-white rounded-lg shadow-md border border-gray-200 p-6 h-fit">
+          <div className="max-w-lg bg-white rounded-lg shadow-md border border-gray-200 p-6 h-fit">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {format(selectedDate, "MMMM dd, yyyy")}
             </h3>

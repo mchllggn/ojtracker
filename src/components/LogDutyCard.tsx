@@ -1,6 +1,6 @@
 import { useState } from "react";
 import NumberInput from "./NumberInput";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import type { OjtTracking } from "../services/api";
 import PrimaryButton from "./PrimaryButton";
 
 interface LogDutyCardProps {
@@ -18,7 +18,7 @@ const LogDutyCard = ({
   isLoading,
   onAddTodayDuty,
 }: LogDutyCardProps) => {
-  const [entryMode, setEntryMode] = useState<"time-in" | "specific">("time-in");
+  const [customHours, setCustomHours] = useState<boolean>(false);
 
   const dutyHoursPerDay = trackingData?.dutyHoursPerDay ?? 0;
 
@@ -36,7 +36,7 @@ const LogDutyCard = ({
   const handleSubmit = async () => {
     if (!trackingData || isLoading) return;
 
-    if (entryMode === "time-in") {
+    if (!customHours) {
       if (hasTimedInToday) {
         return;
       }
@@ -65,34 +65,22 @@ const LogDutyCard = ({
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="mb-4 flex gap-2 p-1 bg-gray-100 rounded-lg">
+      <div className="flex items-center justify-end mb-2 text-center">
         <button
           type="button"
-          onClick={() => setEntryMode("time-in")}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            entryMode === "time-in"
+          onClick={() => setCustomHours((prev) => !prev)}
+          className={`border bg-gray-100 px-3 py-1 rounded-lg text-xs transition-all hover:cursor-pointer ${
+            customHours
               ? "bg-white text-blue-700 shadow-sm"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          Time In
-        </button>
-        <button
-          type="button"
-          onClick={() => setEntryMode("specific")}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            entryMode === "specific"
-              ? "bg-white text-blue-700 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          Specific Hours
+          Custom Hours
         </button>
       </div>
-
       <div className="flex gap-4">
-        {entryMode === "specific" && (
-          <div className="flex-1">
+        {customHours && (
+          <div className="w-full">
             <NumberInput
               value={todayDutyHours}
               onChange={setTodayDutyHours}
@@ -106,7 +94,7 @@ const LogDutyCard = ({
         <PrimaryButton
           onClick={handleSubmit}
           disabled={isLoading || !trackingData}
-          className={`${entryMode === "time-in" && "w-full"} px-6 py-3`}
+          className={`px-6 py-3`}
         >
           Time in
         </PrimaryButton>

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import type { OjtTracking } from "../services/api";
 import FinishDateCard from "./FinishDateCard";
 import LogDutyCard from "./LogDutyCard";
 
@@ -46,28 +46,9 @@ const TrackingView = ({
       </div>
 
       <div className="space-y-6">
-        <div className="flex gap-6 items-center justify-between">
-          {/* Since Started Date */}
-          <div className="p-4 bg-gray-100 rounded-md">
-            <p className="text-xs uppercase font-medium tracking-wide text-gray-600">
-              Started Since:
-              <span className="pl-2 text-blue-600 font-bold">
-                {trackingData
-                  ? format(new Date(trackingData.startDate), "MMMM dd, yyyy")
-                  : "N/A"}
-              </span>
-            </p>
-          </div>
-
-          <FinishDateCard
-            trackingData={trackingData}
-            completedHours={completedHours}
-          />
-        </div>
-
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
+        <div className="mb-6">
+          <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-gray-700">
               Overall Progress
             </span>
@@ -81,15 +62,27 @@ const TrackingView = ({
               style={{ width: `${getProgressPercentage()}%` }}
             ></div>
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-600">
-            <span>{completedHours} hrs completed</span>
-            <span>{trackingData?.totalHours} hrs total</span>
+          <div className="flex justify-between text-xs text-gray-600">
+            <div>
+              <span>
+                Started since{" "}
+                {trackingData?.startDate
+                  ? format(new Date(trackingData.startDate), "MMMM dd, yyyy")
+                  : "N/A"}
+              </span>
+            </div>
+            <div>
+              <FinishDateCard
+                trackingData={trackingData}
+                completedHours={completedHours}
+              />
+            </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gray-100 rounded-xl p-6">
+        <div className="grid grid-cols-3 gap-6">
+          <div className="shadow-sm border rounded-lg p-6">
             <p className="text-lg font-semibold text-gray-900">Total Days</p>
             <p className="text-3xl font-bold text-blue-600">
               {trackingData?.totalDays}
@@ -97,7 +90,7 @@ const TrackingView = ({
             <p className="text-xs text-gray-500 mt-1">days required</p>
           </div>
 
-          <div className="bg-gray-100 rounded-xl p-6">
+          <div className="shadow-sm border rounded-lg p-6">
             <p className="text-lg font-semibold text-gray-900">
               Hours Completed
             </p>
@@ -107,7 +100,7 @@ const TrackingView = ({
             </p>
           </div>
 
-          <div className="bg-gray-100 rounded-xl p-6">
+          <div className="shadow-sm border rounded-lg p-6">
             <p className="text-lg font-semibold text-gray-900">
               Remaining Hours
             </p>

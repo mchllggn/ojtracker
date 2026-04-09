@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import ojtTrackingService from "../../backend/services/ojtTrackingService";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import {
+  getOjtTracking,
+  addDutyHours,
+  resetTracking as resetOjtTracking,
+  type OjtTracking,
+} from "../services/api";
 import Layout from "../components/Layout";
 import StartTrackingForm from "../components/StartTrackingForm";
 import TrackingView from "../components/TrackingView";
-import DutyLogsTable from "../components/DutyLogsTable";
 import { useAuth } from "../hooks/useAuth";
 
 const Home = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Tracking state
   const [isTracking, setIsTracking] = useState(false);
@@ -16,31 +19,73 @@ const Home = () => {
   const [todayDutyHours, setTodayDutyHours] = useState("");
   const [trackingData, setTrackingData] = useState<OjtTracking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  const loadTrackingData = async () => {
+    try {
+      setLoadError("");
+      const response = await getOjtTracking();
+      if (response.success && response.tracking) {
+        setTrackingData(response.tracking);
+        setCompletedHours(response.tracking.completedHours || 0);
+        setIsTracking(true);
+        return;
+      }
+
+      setTrackingData(null);
+      setCompletedHours(0);
+      setIsTracking(false);
+    } catch (error) {
+      console.error("Failed to load tracking data:", error);
+      setLoadError("Failed to load your tracking data. Please try again.");
+      setTrackingData(null);
+      setCompletedHours(0);
+      setIsTracking(false);
+    } finally {
+      setIsLoading(false);
+      setIsInitializing(false);
+    }
+  };
 
   useEffect(() => {
-    if (!user || !isAuthenticated) {
-      window.location.href = "/";
+    if (!isAuthenticated) {
       return;
     }
 
-    // Load tracking data from API
-    const loadTrackingData = async () => {
-      try {
-        const response = await ojtTrackingService.getOjtTracking();
-        if (response.success && response.tracking) {
-          setTrackingData(response.tracking);
-          setCompletedHours(response.tracking.completedHours || 0);
-          setIsTracking(true);
-        }
-      } catch (error) {
-        console.error("Failed to load tracking data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadTrackingData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (isInitializing) {
+    return (
+      <Layout>
+        <div className="py-16 text-center text-gray-600">
+          Loading your tracking data...
+        </div>
+      </Layout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Layout>
+        <div className="py-16 text-center space-y-4">
+          <p className="text-red-600">{loadError}</p>
+          <button
+            type="button"
+            onClick={loadTrackingData}
+            className="px-5 py-2.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </Layout>
+    );
+  }
 
   const addTodayDuty = async (hoursOverride?: number) => {
     const hours = hoursOverride ?? parseFloat(todayDutyHours);
@@ -51,7 +96,7 @@ const Home = () => {
 
     try {
       setIsLoading(true);
-      const response = await ojtTrackingService.addDutyHours({
+      const response = await addDutyHours({
         hoursWorked: hours,
       });
 
@@ -77,7 +122,7 @@ const Home = () => {
 
     try {
       setIsLoading(true);
-      const response = await ojtTrackingService.resetTracking();
+      const response = await resetOjtTracking();
 
       if (response.success) {
         setIsTracking(false);
@@ -94,46 +139,6 @@ const Home = () => {
     }
   };
 
-  const handleEditDutyLog = async (dutyLogId: number, hoursWorked: number) => {
-    try {
-      setIsLoading(true);
-      const response = await ojtTrackingService.updateDutyLog(dutyLogId, {
-        hoursWorked,
-      });
-
-      if (response.success && response.tracking) {
-        setTrackingData(response.tracking);
-        setCompletedHours(response.tracking.completedHours);
-      } else {
-        alert(response.message || "Failed to update duty log");
-      }
-    } catch (error) {
-      console.error("Failed to update duty log:", error);
-      alert("An error occurred while updating duty log");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteDutyLog = async (dutyLogId: number) => {
-    try {
-      setIsLoading(true);
-      const response = await ojtTrackingService.deleteDutyLog(dutyLogId);
-
-      if (response.success && response.tracking) {
-        setTrackingData(response.tracking);
-        setCompletedHours(response.tracking.completedHours);
-      } else {
-        alert(response.message || "Failed to delete duty log");
-      }
-    } catch (error) {
-      console.error("Failed to delete duty log:", error);
-      alert("An error occurred while deleting duty log");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const getProgressPercentage = () => {
     if (!trackingData) return 0;
     return Math.min((completedHours / trackingData.totalHours) * 100, 100);
@@ -143,17 +148,6 @@ const Home = () => {
     if (!trackingData) return 0;
     return Math.max(trackingData.totalHours - completedHours, 0);
   };
-
-  if (!user || isLoading) {
-    return (
-      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Layout>
@@ -166,24 +160,17 @@ const Home = () => {
           }}
         />
       ) : (
-        <>
-          <TrackingView
-            trackingData={trackingData}
-            completedHours={completedHours}
-            todayDutyHours={todayDutyHours}
-            setTodayDutyHours={setTodayDutyHours}
-            isLoading={isLoading}
-            onAddTodayDuty={addTodayDuty}
-            onResetTracking={resetTracking}
-            getProgressPercentage={getProgressPercentage}
-            getRemainingHours={getRemainingHours}
-          />
-          <DutyLogsTable
-            trackingData={trackingData}
-            onEditDutyLog={handleEditDutyLog}
-            onDeleteDutyLog={handleDeleteDutyLog}
-          />
-        </>
+        <TrackingView
+          trackingData={trackingData}
+          completedHours={completedHours}
+          todayDutyHours={todayDutyHours}
+          setTodayDutyHours={setTodayDutyHours}
+          isLoading={isLoading}
+          onAddTodayDuty={addTodayDuty}
+          onResetTracking={resetTracking}
+          getProgressPercentage={getProgressPercentage}
+          getRemainingHours={getRemainingHours}
+        />
       )}
     </Layout>
   );

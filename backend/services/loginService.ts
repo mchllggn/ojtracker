@@ -1,33 +1,109 @@
-import { API_BASE_URL } from "./authTypes";
-import type { AuthResponse, LoginData } from "./authTypes";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
 
-export const login = async (data: LoginData): Promise<AuthResponse> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-    const result = (await response.json()) as AuthResponse;
+interface LoginRequest {
+  email: string;
+  password: string;
+}
 
-    if (!response.ok) {
-      const fieldErrors = result.fieldErrors;
-      return {
-        success: false,
-        message: result.message || "Login failed",
-        ...(fieldErrors ? { fieldErrors } : {}),
-      };
-    }
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  fieldErrors?: {
+    email?: string;
+    password?: string;
+  };
+  token?: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
 
-    return result;
-  } catch (error) {
-    console.error("Login request error:", error);
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const buildUserResponse = (user: {
+  id: number;
+  name: string;
+  email: string;
+}) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+});
+
+export const login = async (data: LoginRequest): Promise<LoginResponse> => {
+  const rawEmail = data?.email ?? "";
+  const password = data?.password ?? "";
+
+  const email = normalizeEmail(rawEmail);
+
+  if (!email || !password) {
     return {
       success: false,
-      message: "Network error. Please check if the server is running.",
+      message: "Email and password are required",
+      fieldErrors: {
+        ...(!email ? { email: "Email is required" } : {}),
+        ...(!password ? { password: "Password is required" } : {}),
+      },
     };
   }
+
+  if (!isValidEmail(email)) {
+    return {
+      success: false,
+      message: "Please enter a valid email address",
+      fieldErrors: {
+        email: "Please enter a valid email address",
+      },
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      message: "Invalid email or password",
+      fieldErrors: {
+        email: "Invalid email or password",
+        password: "Invalid email or password",
+      },
+    };
+  }
+
+  const isValidPassword = await bcrypt.compare(password, user.password);
+  if (!isValidPassword) {
+    return {
+      success: false,
+      message: "Invalid email or password",
+      fieldErrors: {
+        email: "Invalid email or password",
+        password: "Invalid email or password",
+      },
+    };
+  }
+
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+    expiresIn: "24h",
+  });
+
+  return {
+    success: true,
+    message: "Login successful",
+    token,
+    user: buildUserResponse(user),
+  };
 };

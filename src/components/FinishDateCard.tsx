@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { OjtTracking } from "../../backend/services/ojtTrackingService";
+import type { OjtTracking } from "../services/api";
 
 interface FinishDateCardProps {
   trackingData: OjtTracking | null;
@@ -63,12 +63,10 @@ const FinishDateCard = ({
   };
 
   return (
-    <div className="p-4 bg-gray-100 rounded-md">
-      <p className="text-xs font-medium uppercase text-gray-600">
-        Estimated Finish Date:
-        <span className="text-blue-600 pl-2">{calculateEndDate()}</span>
-      </p>
-    </div>
+    <span className="text-xs text-gray-600">
+      Estimated Finish Date:
+      <span className="text-blue-600 pl-1">{calculateEndDate()}</span>
+    </span>
   );
 };
 

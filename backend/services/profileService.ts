@@ -1,18 +1,40 @@
-import { API_BASE_URL } from "./authTypes";
-import type { ProfileResponse } from "./authTypes";
+import { PrismaClient } from "@prisma/client";
 
-export const getProfile = async (token: string): Promise<ProfileResponse> => {
-  const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+const prisma = new PrismaClient();
 
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
+interface ProfileResponse {
+  success: boolean;
+  message?: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+    createdAt: Date;
+  };
+}
+
+export const getProfile = async (userId: number): Promise<ProfileResponse> => {
+  if (!userId) {
+    return {
+      success: false,
+      message: "Unauthorized",
+    };
   }
 
-  return (await response.json()) as ProfileResponse;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, createdAt: true },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      message: "User not found",
+    };
+  }
+
+  return {
+    success: true,
+    user,
+  };
 };

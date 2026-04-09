@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import PrimaryButton from "./PrimaryButton";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -7,10 +7,12 @@ interface LayoutProps {
   className?: string;
   children: ReactNode;
   onLoginClick?: () => void;
+  title?: string;
 }
 
-const Layout = ({ className, children, onLoginClick }: LayoutProps) => {
+const Layout = ({ className, children, onLoginClick, title }: LayoutProps) => {
   const { user, logout } = useAuth();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -20,16 +22,23 @@ const Layout = ({ className, children, onLoginClick }: LayoutProps) => {
   const navLinks = [
     { label: "Home", href: "/home" },
     { label: "Calendar", href: "/calendar" },
+    { label: "Duty Logs", href: "/duty-logs" },
   ];
 
   return (
     <div className={`min-h-screen ${className ?? ""}`}>
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <title>{title || "OJTracker"}</title>
+      <header className={`${!user && "container"} mx-auto bg-white`}>
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <span className="text-xl font-bold text-gray-900">OJTracker</span>
-              {user && (
+            <div className="flex items-center">
+              <span className="text-xl font-bold text-gray-900 hover:cursor-pointer">
+                <Link to="/">OJTracker</Link>
+              </span>
+            </div>
+            {/* Header Right Content */}
+            {user ? (
+              <div className="flex items-center space-x-6">
                 <nav className="flex space-x-6">
                   {navLinks.map((link) => (
                     <Link
@@ -41,35 +50,32 @@ const Layout = ({ className, children, onLoginClick }: LayoutProps) => {
                     </Link>
                   ))}
                 </nav>
-              )}
-            </div>
-            {/* Header Right Content */}
-            {user ? (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center space-x-3 bg-gray-50 px-4 py-2 rounded-full">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-gray-700 font-medium">
-                    Welcome, {user.name}!
-                  </span>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen((previous) => !previous)}
+                  >
+                    <div className="w-12 h-12 border hover:cursor-pointer shadow rounded-full flex bg-blue-500 items-center justify-center">
+                      <span className="font-medium text-lg text-white">
+                        {user.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </button>
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-52 rounded-md border border-gray-200 bg-white p-2 shadow-lg z-10">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full rounded-md hover:cursor-pointer bg-red-500 px-4 py-2 text-left text-sm font-medium text-white hover:bg-red-600"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-red-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                >
-                  Logout
-                </button>
               </div>
             ) : (
-              <PrimaryButton
-                className="hover:cursor-pointer"
-                onClick={onLoginClick}
-              >
-                Login
-              </PrimaryButton>
+              <div>
+                <PrimaryButton onClick={onLoginClick}>Login</PrimaryButton>
+              </div>
             )}
           </div>
         </div>

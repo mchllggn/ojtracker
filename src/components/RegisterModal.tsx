@@ -1,42 +1,81 @@
-import React from "react";
+import { type FormEvent, useState } from "react";
+import { register, type RegisterFieldErrors } from "../services/api";
 import Modal from "./Modal";
 import TextInput from "./TextInput";
 import PrimaryButton from "./PrimaryButton";
-import type { RegisterFieldErrors } from "../../backend/services/authTypes";
-
 interface RegisterModalProps {
   showModal: boolean;
   setShowModal: (show: boolean) => void;
-  registerData: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  };
-  setRegisterData: (data: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }) => void;
-  errorMessage?: string;
-  fieldErrors?: RegisterFieldErrors;
-  handleRegister: (e: React.FormEvent) => void;
   setShowLoginModal: (show: boolean) => void;
 }
 
-const RegisterModal: React.FC<RegisterModalProps> = ({
+const RegisterModal = ({
   showModal,
   setShowModal,
-  registerData,
-  setRegisterData,
-  errorMessage,
-  fieldErrors,
-  handleRegister,
   setShowLoginModal,
-}) => {
+}: RegisterModalProps) => {
+  const [registerData, setRegisterData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
+
+  const clearErrors = () => {
+    setErrorMessage("");
+    setFieldErrors({});
+  };
+
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    clearErrors();
+
+    const response = await register({
+      name: registerData.name,
+      email: registerData.email,
+      password: registerData.password,
+      confirmPassword: registerData.confirmPassword,
+    });
+
+    if (response.success) {
+      alert("Registration successful! Please login.");
+      setRegisterData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      clearErrors();
+      setShowModal(false);
+      setShowLoginModal(true);
+      return;
+    }
+
+    const nextFieldErrors = (response.fieldErrors ?? {}) as RegisterFieldErrors;
+    setFieldErrors(nextFieldErrors);
+
+    if (
+      !nextFieldErrors.name &&
+      !nextFieldErrors.email &&
+      !nextFieldErrors.password &&
+      !nextFieldErrors.confirmPassword
+    ) {
+      setErrorMessage(
+        response.message || "Registration failed. Please try again.",
+      );
+    }
+  };
+
   return (
-    <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+    <Modal
+      isOpen={showModal}
+      onClose={() => {
+        clearErrors();
+        setShowModal(false);
+      }}
+    >
       <form className="space-y-6" onSubmit={handleRegister}>
         <div className="space-y-4">
           {errorMessage && (
@@ -131,7 +170,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
         <span>Return to</span>
         <a
           href="#"
-          onClick={() => setShowLoginModal(true)}
+          onClick={() => {
+            clearErrors();
+            setShowLoginModal(true);
+          }}
           className="text-blue-600 font-medium hover:underline"
         >
           Sign In

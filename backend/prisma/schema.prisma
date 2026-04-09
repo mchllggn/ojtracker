@@ -27,7 +27,6 @@ model OjtTracking {
   startDate         DateTime
   totalHours        Float
   dutyHoursPerDay   Float
-  submissionHours   Float     @default(0)
   totalDays         Int
   completedHours    Float     @default(0)
   createdAt         DateTime  @default(now())

@@ -5,7 +5,6 @@ CREATE TABLE `OjtTracking` (
     `startDate` DATETIME(3) NOT NULL,
     `totalHours` DOUBLE NOT NULL,
     `dutyHoursPerDay` DOUBLE NOT NULL,
-    `submissionHours` DOUBLE NOT NULL DEFAULT 0,
     `totalDays` INTEGER NOT NULL,
     `completedHours` DOUBLE NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
