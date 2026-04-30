@@ -4,6 +4,7 @@ import Demo from "./pages/Demo";
 import Home from "./pages/Home";
 import Calendar from "./pages/Calendar";
 import DutyLogs from "./pages/DutyLogs";
+import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Test from "./pages/Test";
@@ -13,6 +14,7 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/demo" element={<Demo />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/test" element={<Test />} />
       <Route
         path="/home"

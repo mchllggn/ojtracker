@@ -1,4 +1,4 @@
-import type { OjtTracking } from "../services/api";
+import type { OjtTracking } from "../apis";
 import { format } from "date-fns";
 import { useState } from "react";
 

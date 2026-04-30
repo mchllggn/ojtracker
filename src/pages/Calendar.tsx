@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import {
-  getOjtTracking,
-  addDutyHours,
-  type OjtTracking,
-} from "../services/api";
+import { getOjtTracking, addDutyHours, type OjtTracking } from "../apis";
 import Layout from "../components/Layout";
 import TrackingCalendar from "../components/TrackingCalendar";
 import NumberInput from "../components/NumberInput";
@@ -87,9 +83,9 @@ const Calendar = () => {
 
   return (
     <Layout>
-      <div className="flex gap-8 justify-center items-start py-10">
+      <div className="flex gap-8">
         {/* Calendar */}
-        <div className="max-w-2xl flex-1">
+        <div className="border max-w-lg w-full rounded-md overflow-hidden shadow-sm">
           <TrackingCalendar
             trackingData={trackingData}
             onSelectDate={handleSelectDate}

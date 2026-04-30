@@ -13,6 +13,9 @@ interface LoginRequest {
 interface LoginResponse {
   success: boolean;
   message: string;
+  verificationRequired?: boolean;
+  email?: string;
+  resendAvailableInSeconds?: number;
   fieldErrors?: {
     email?: string;
     password?: string;
@@ -80,6 +83,30 @@ export const login = async (data: LoginRequest): Promise<LoginResponse> => {
       fieldErrors: {
         email: "Invalid email or password",
         password: "Invalid email or password",
+      },
+    };
+  }
+
+  if (!user.isEmailVerified) {
+    const resendAvailableInSeconds = user.emailVerificationOtpResendAvailableAt
+      ? Math.max(
+          0,
+          Math.ceil(
+            (user.emailVerificationOtpResendAvailableAt.getTime() -
+              Date.now()) /
+              1000,
+          ),
+        )
+      : 0;
+
+    return {
+      success: false,
+      verificationRequired: true,
+      email: user.email,
+      resendAvailableInSeconds,
+      message: "Please verify your email before logging in.",
+      fieldErrors: {
+        email: "Please verify your email before logging in.",
       },
     };
   }

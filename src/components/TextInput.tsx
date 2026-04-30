@@ -1,14 +1,12 @@
 import React from "react";
 
-interface TextInputProps {
+interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
   name: string;
   type: string;
   placeholder: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  autoComplete?: string;
   className?: string;
   label?: string;
   srOnly?: boolean;
@@ -26,6 +24,7 @@ const TextInput: React.FC<TextInputProps> = ({
   className = "",
   label,
   srOnly = true,
+  ...rest
 }) => {
   return (
     <div>
@@ -49,6 +48,7 @@ const TextInput: React.FC<TextInputProps> = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        {...rest}
       />
     </div>
   );

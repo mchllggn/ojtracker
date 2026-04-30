@@ -45,7 +45,6 @@ const NumberInput = ({
       min={min}
       step={step}
       className={className}
-      required
     />
   );
 };

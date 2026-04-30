@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   login,
   register,
   type LoginFieldErrors,
   type RegisterFieldErrors,
   type User,
-} from "../services/api";
+} from "../apis";
 
 type LoginData = {
   email: string;
@@ -42,15 +42,15 @@ export const useIndexAuthForms = () => {
   const [registerFieldErrors, setRegisterFieldErrors] =
     useState<RegisterFieldErrors>({});
 
-  const clearLoginErrors = () => {
+  const clearLoginErrors = useCallback(() => {
     setLoginError("");
     setLoginFieldErrors({});
-  };
+  }, []);
 
-  const clearRegisterErrors = () => {
+  const clearRegisterErrors = useCallback(() => {
     setRegisterError("");
     setRegisterFieldErrors({});
-  };
+  }, []);
 
   const updateLoginData = (data: LoginData) => {
     setLoginData(data);
@@ -65,6 +65,7 @@ export const useIndexAuthForms = () => {
   const handleLogin = async (
     e: React.FormEvent,
     onSuccess: (user: User, token: string) => void,
+    onVerificationRequired: (email: string) => void,
   ) => {
     e.preventDefault();
     clearLoginErrors();
@@ -79,6 +80,11 @@ export const useIndexAuthForms = () => {
       return;
     }
 
+    if (response.verificationRequired && response.email) {
+      onVerificationRequired(response.email);
+      return;
+    }
+
     const fieldErrors = (response.fieldErrors ?? {}) as LoginFieldErrors;
     setLoginFieldErrors(fieldErrors);
     if (!fieldErrors.email && !fieldErrors.password) {
@@ -86,7 +92,10 @@ export const useIndexAuthForms = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent, onSuccess: () => void) => {
+  const handleRegister = async (
+    e: React.FormEvent,
+    onVerificationRequired: (email: string) => void,
+  ) => {
     e.preventDefault();
     clearRegisterErrors();
 
@@ -98,10 +107,9 @@ export const useIndexAuthForms = () => {
     });
 
     if (response.success) {
-      alert("Registration successful! Please login.");
       clearRegisterErrors();
       setRegisterData(defaultRegisterData);
-      onSuccess();
+      onVerificationRequired(response.email ?? registerData.email);
       return;
     }
 

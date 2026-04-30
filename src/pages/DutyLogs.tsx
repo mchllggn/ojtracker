@@ -4,13 +4,12 @@ import {
   updateDutyLog,
   deleteDutyLog,
   type OjtTracking,
-} from "../services/api";
+} from "../apis";
 import Layout from "../components/Layout";
 import DutyLogsTable from "../components/DutyLogsTable";
 
 const DutyLogs = () => {
   const [trackingData, setTrackingData] = useState<OjtTracking | null>(null);
-  const [completedHours, setCompletedHours] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -21,13 +20,11 @@ const DutyLogs = () => {
       const response = await getOjtTracking();
       if (response.success) {
         setTrackingData(response.tracking ?? null);
-        setCompletedHours(response.tracking?.completedHours || 0);
       }
     } catch (error) {
       console.error("Failed to load duty logs:", error);
       setLoadError("Failed to load your duty logs. Please try again.");
       setTrackingData(null);
-      setCompletedHours(0);
     } finally {
       setIsLoading(false);
       setIsInitializing(false);
@@ -47,7 +44,6 @@ const DutyLogs = () => {
 
       if (response.success && response.tracking) {
         setTrackingData(response.tracking);
-        setCompletedHours(response.tracking.completedHours);
       } else {
         alert(response.message || "Failed to update duty log");
       }
@@ -66,7 +62,6 @@ const DutyLogs = () => {
 
       if (response.success && response.tracking) {
         setTrackingData(response.tracking);
-        setCompletedHours(response.tracking.completedHours);
       } else {
         alert(response.message || "Failed to delete duty log");
       }
@@ -108,12 +103,6 @@ const DutyLogs = () => {
   return (
     <Layout>
       <div className="py-8">
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">Duty Logs</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Completed Hours: {completedHours}
-          </p>
-        </div>
         <DutyLogsTable
           trackingData={trackingData}
           onEditDutyLog={handleEditDutyLog}

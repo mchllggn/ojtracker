@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { OjtTracking } from "../services/api";
+import type { OjtTracking } from "../apis";
 
 export const useGuestTracking = () => {
   const [isGuestTracking, setIsGuestTracking] = useState(false);

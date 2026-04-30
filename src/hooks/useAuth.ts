@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { authStorage, type User } from "../services/api";
+import { authStorage, type User } from "../apis";
 
 const AUTH_CHANGE_EVENT = "auth-change";
 

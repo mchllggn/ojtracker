@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { sendChatMessage } from "../services/api";
+import { sendChatMessage } from "../apis";
 import { Send } from "lucide-react";
 
 type ChatRole = "user" | "assistant";

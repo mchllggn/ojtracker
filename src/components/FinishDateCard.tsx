@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { OjtTracking } from "../services/api";
+import type { OjtTracking } from "../apis";
 
 interface FinishDateCardProps {
   trackingData: OjtTracking | null;

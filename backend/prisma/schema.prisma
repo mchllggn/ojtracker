@@ -15,6 +15,10 @@ model User {
   name        String
   email       String       @unique
   password    String
+  isEmailVerified Boolean  @default(false)
+  emailVerificationOtpHash String?
+  emailVerificationOtpExpiresAt DateTime?
+  emailVerificationOtpResendAvailableAt DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   ojtTracking OjtTracking?

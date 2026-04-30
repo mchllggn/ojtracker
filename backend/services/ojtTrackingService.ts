@@ -67,6 +67,9 @@ export const startOjtTracking = async (
   }
 
   const { startDate, totalHours, dutyHoursPerDay, totalDays } = data;
+  const parsedTotalHours = parseFloat(String(totalHours));
+  const parsedDutyHoursPerDay = parseFloat(String(dutyHoursPerDay));
+  const parsedTotalDays = parseInt(String(totalDays), 10);
 
   // Validate required fields
   if (
@@ -78,6 +81,27 @@ export const startOjtTracking = async (
     return {
       success: false,
       message: "All fields are required",
+    };
+  }
+
+  if (
+    Number.isNaN(parsedTotalHours) ||
+    Number.isNaN(parsedDutyHoursPerDay) ||
+    Number.isNaN(parsedTotalDays) ||
+    parsedTotalHours <= 0 ||
+    parsedDutyHoursPerDay <= 0 ||
+    parsedTotalDays <= 0
+  ) {
+    return {
+      success: false,
+      message: "Please provide valid positive values.",
+    };
+  }
+
+  if (parsedDutyHoursPerDay >= parsedTotalHours) {
+    return {
+      success: false,
+      message: "Duty hours per day must be less than total required hours.",
     };
   }
 
@@ -97,9 +121,9 @@ export const startOjtTracking = async (
     data: {
       userId,
       startDate: new Date(startDate),
-      totalHours: parseFloat(String(totalHours)),
-      dutyHoursPerDay: parseFloat(String(dutyHoursPerDay)),
-      totalDays: parseInt(String(totalDays), 10),
+      totalHours: parsedTotalHours,
+      dutyHoursPerDay: parsedDutyHoursPerDay,
+      totalDays: parsedTotalDays,
       completedHours: 0,
     },
   });

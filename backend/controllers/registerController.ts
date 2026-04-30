@@ -11,6 +11,9 @@ interface RegisterRequest {
 interface RegisterResponse {
   success: boolean;
   message: string;
+  verificationRequired?: boolean;
+  email?: string;
+  resendAvailableInSeconds?: number;
   fieldErrors?: {
     name?: string;
     email?: string;

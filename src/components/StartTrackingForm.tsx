@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import NumberInput from "./NumberInput";
-import { startTracking, type OjtTracking } from "../services/api";
+import { startTracking, type OjtTracking } from "../apis";
 import PrimaryButton from "./PrimaryButton";
 
 interface StartTrackingFormProps {
@@ -37,6 +37,10 @@ const StartTrackingForm = ({
       return "Please enter valid duty hours per day.";
     }
 
+    if (step === 3 && !Number.isNaN(total) && duty >= total) {
+      return "Duty hours per day must be less than total required hours.";
+    }
+
     return "";
   };
 
@@ -56,9 +60,7 @@ const StartTrackingForm = ({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     const validationMessage =
       validateStep(1) || validateStep(2) || validateStep(3);
     if (validationMessage) {
@@ -111,7 +113,10 @@ const StartTrackingForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+    <form
+      onSubmit={(e) => e.preventDefault()}
+      className="max-w-2xl mx-auto space-y-6"
+    >
       <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         Start Tracking Your OJT
       </h2>
@@ -224,7 +229,8 @@ const StartTrackingForm = ({
           </PrimaryButton>
         ) : (
           <PrimaryButton
-            type="submit"
+            type="button"
+            onClick={handleSubmit}
             className="w-full py-3 text-lg"
             disabled={isLoading}
           >

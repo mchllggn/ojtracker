@@ -1,6 +1,6 @@
 import { useState } from "react";
 import NumberInput from "./NumberInput";
-import type { OjtTracking } from "../services/api";
+import type { OjtTracking } from "../apis";
 import PrimaryButton from "./PrimaryButton";
 
 interface LogDutyCardProps {

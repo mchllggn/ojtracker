@@ -7,10 +7,44 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+backend/.env
+backend/.env.*
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.der
+secrets/
+
 node_modules
 dist
 dist-ssr
+coverage
+.vite
+.turbo
+*.tsbuildinfo
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 *.local
+backend/dist
+backend/coverage
+backend/.vite
+backend/.turbo
+backend/.cache
+backend/node_modules
+backend/.prisma
+backend/tsconfig.tsbuildinfo
+backend/prisma/*.db
+backend/prisma/*.sqlite
+backend/prisma/*.sqlite3
 
 # Editor directories and files
 .vscode/*

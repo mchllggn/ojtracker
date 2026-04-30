@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, BarChart3, Calendar } from "lucide-react";
-import LoginModal from "../components/LoginModal";
-import RegisterModal from "../components/RegisterModal";
+import AuthModal from "../components/AuthModal";
 import Layout from "../components/Layout";
 import { useAuth } from "../hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, login: loginUser } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     if (user && isAuthenticated) {
@@ -19,7 +17,7 @@ const Index = () => {
   }, [isAuthenticated, navigate, user]);
 
   return (
-    <Layout onLoginClick={() => setShowLoginModal(true)}>
+    <Layout onLoginClick={() => setShowAuthModal(true)}>
       <div className="space-y-12">
         <div className="sm:pt-12 pt-24 animate-in space-y-4 text-center duration-500 fade-in">
           <h1 className="text-7xl font-bold text-gray-900">OJTracker</h1>
@@ -73,19 +71,17 @@ const Index = () => {
           </div>
         </div>
       </div>
-      <LoginModal
-        showModal={showLoginModal}
-        setShowModal={setShowLoginModal}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
         onLoginSuccess={(loggedUser, token) => {
           loginUser(loggedUser, token);
           navigate("/home");
         }}
-        setShowRegisterModal={setShowRegisterModal}
-      />
-      <RegisterModal
-        showModal={showRegisterModal}
-        setShowModal={setShowRegisterModal}
-        setShowLoginModal={setShowLoginModal}
+        onVerificationRequired={(email) => {
+          setShowAuthModal(false);
+          navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        }}
       />
     </Layout>
   );

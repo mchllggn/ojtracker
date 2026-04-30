@@ -9,6 +9,9 @@ interface LoginRequest {
 interface LoginResponse {
   success: boolean;
   message: string;
+  verificationRequired?: boolean;
+  email?: string;
+  resendAvailableInSeconds?: number;
   fieldErrors?: {
     email?: string;
     password?: string;
@@ -28,7 +31,11 @@ export const login = async (
   try {
     const result = await loginService(req.body);
 
-    const statusCode = result.success ? 200 : 401;
+    const statusCode = result.success
+      ? 200
+      : result.verificationRequired
+        ? 403
+        : 401;
     res.status(statusCode).json(result);
   } catch (error) {
     console.error("Login error:", error);
