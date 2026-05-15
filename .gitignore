@@ -12,8 +12,10 @@ lerna-debug.log*
 .env.*
 !.env.example
 !.env.sample
-backend/.env
-backend/.env.*
+packages/client/.env
+packages/client/.env.*
+packages/server/.env
+packages/server/.env.*
 *.pem
 *.key
 *.crt
@@ -22,29 +24,28 @@ backend/.env.*
 *.der
 secrets/
 
+# Dependencies and build output
 node_modules
+packages/*/node_modules
 dist
+packages/*/dist
 dist-ssr
 coverage
+packages/*/coverage
 .vite
+packages/*/.vite
 .turbo
 *.tsbuildinfo
+packages/*/*.tsbuildinfo
 *.db
 *.db-journal
 *.sqlite
 *.sqlite3
 *.local
-backend/dist
-backend/coverage
-backend/.vite
-backend/.turbo
-backend/.cache
-backend/node_modules
-backend/.prisma
-backend/tsconfig.tsbuildinfo
-backend/prisma/*.db
-backend/prisma/*.sqlite
-backend/prisma/*.sqlite3
+packages/server/.prisma
+packages/server/prisma/*.db
+packages/server/prisma/*.sqlite
+packages/server/prisma/*.sqlite3
 
 # Editor directories and files
 .vscode/*

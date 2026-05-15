@@ -1,0 +1,82 @@
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   .env
+#	modified:   README.md
+#	deleted:    backend/.env
+#	deleted:    backend/controllers/chatController.ts
+#	deleted:    backend/controllers/emailVerificationController.ts
+#	deleted:    backend/controllers/loginController.ts
+#	deleted:    backend/controllers/ojtTrackingController.ts
+#	deleted:    backend/controllers/profileController.ts
+#	deleted:    backend/controllers/registerController.ts
+#	deleted:    backend/index.ts
+#	deleted:    backend/middleware/auth.ts
+#	deleted:    backend/nodemon.json
+#	deleted:    backend/package.json
+#	deleted:    backend/pnpm-lock.yaml
+#	deleted:    backend/prisma/migrations/20251114141235_init/migration.sql
+#	deleted:    backend/prisma/migrations/20260223132007_add_ojt_tracking/migration.sql
+#	deleted:    backend/prisma/migrations/20260412000000_add_email_verification/migration.sql
+#	deleted:    backend/prisma/migrations/migration_lock.toml
+#	deleted:    backend/prisma/schema.prisma
+#	deleted:    backend/routes/auth.ts
+#	deleted:    backend/routes/chat.ts
+#	deleted:    backend/routes/ojtTracking.ts
+#	deleted:    backend/services/authStorage.ts
+#	deleted:    backend/services/authTypes.ts
+#	deleted:    backend/services/chatService.ts
+#	deleted:    backend/services/emailService.ts
+#	deleted:    backend/services/emailVerificationService.ts
+#	deleted:    backend/services/loginService.ts
+#	deleted:    backend/services/ojtTrackingService.ts
+#	deleted:    backend/services/profileService.ts
+#	deleted:    backend/services/registerService.ts
+#	deleted:    backend/tsconfig.json
+#	modified:   package.json
+#	deleted:    pnpm-lock.yaml
+#	modified:   src/App.tsx
+#	new file:   src/apis/authEvents.ts
+#	modified:   src/apis/authStorage.ts
+#	deleted:    src/apis/chat.ts
+#	deleted:    src/apis/config.ts
+#	modified:   src/apis/core.ts
+#	modified:   src/apis/index.ts
+#	modified:   src/apis/types.ts
+#	modified:   src/components/AuthModal.tsx
+#	modified:   src/components/DutyLogsTable.tsx
+#	modified:   src/components/Layout.tsx
+#	modified:   src/components/LogDutyCard.tsx
+#	new file:   src/components/LoginForm.tsx
+#	modified:   src/components/PrimaryButton.tsx
+#	deleted:    src/components/ProtectedRoute.tsx
+#	new file:   src/components/RegisterForm.tsx
+#	new file:   src/components/SecondaryButton.tsx
+#	new file:   src/components/SkeletonLoader.tsx
+#	modified:   src/components/StartTrackingForm.tsx
+#	new file:   src/components/StatsCard.tsx
+#	modified:   src/components/TextInput.tsx
+#	modified:   src/components/TrackingView.tsx
+#	new file:   src/components/routes/ProtectedRoute.tsx
+#	new file:   src/components/routes/PublicRoute.tsx
+#	new file:   src/components/ui/dialog.tsx
+#	new file:   src/components/ui/dropdown-menu.tsx
+#	new file:   src/contexts/OjtTrackingContext.tsx
+#	modified:   src/hooks/useAuth.ts
+#	modified:   src/hooks/useGuestTracking.ts
+#	deleted:    src/hooks/useIndexAuthForms.ts
+#	modified:   src/main.tsx
+#	modified:   src/pages/Calendar.tsx
+#	modified:   src/pages/Demo.tsx
+#	modified:   src/pages/DutyLogs.tsx
+#	modified:   src/pages/Home.tsx
+#	modified:   src/pages/Index.tsx
+#	deleted:    src/pages/Test.tsx
+#	modified:   tsconfig.json
+#	modified:   vite.config.ts
+#
